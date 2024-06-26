@@ -1,25 +1,44 @@
-import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link, useParams } from "react-router-dom";
 import axios from "axios";
 import LoadingSpinner from "../components/LoadingSpinner";
+import NotFoundPage from "../components/NotFoundPage";
 
-function StudentAdd() {
-  const navigate = useNavigate();
+function StudentEdit() {
+  let { id } = useParams();
 
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [inputErrorList, setInputErrorList] = useState({});
-  const [student, setStudent] = useState({
-    name: "",
-    phone: "",
-    email: "",
-  });
+  const [student, setStudent] = useState({});
+
+  useEffect(() => {
+    axios
+      .get(`http://127.0.0.1:8000/api/student/show/${id}`)
+      .then((res) => {
+        console.log(res.data);
+        setStudent(res.data.student);
+        setLoading(false);
+      })
+      .catch(function (error) {
+        if (error.response) {
+          if (error.response.status === 404) {
+            // alert(error.response.data);
+            setLoading(false);
+          }
+          if (error.response.status === 500) {
+            alert(error.response.data);
+            setLoading(false);
+          }
+        }
+      });
+  }, [id]);
 
   const handleInput = (e) => {
     e.persist();
     setStudent({ ...student, [e.target.name]: e.target.value });
   };
 
-  const saveStudent = (e) => {
+  const updateStudent = (e) => {
     e.preventDefault();
 
     setLoading(true);
@@ -31,10 +50,9 @@ function StudentAdd() {
     };
 
     axios
-      .post("http://127.0.0.1:8000/api/student", data)
+      .put(`http://127.0.0.1:8000/api/student/edit/${id}`, data)
       .then((res) => {
         alert(res.data.message);
-        navigate("/students");
         setLoading(false);
       })
       .catch(function (error) {
@@ -53,6 +71,10 @@ function StudentAdd() {
     return <LoadingSpinner />;
   }
 
+  if (Object.keys(student).length === 0) {
+    return <NotFoundPage />;
+  }
+
   return (
     <div className="container">
       <div className="row mt-5">
@@ -60,14 +82,14 @@ function StudentAdd() {
           <div className="card">
             <div className="card-header">
               <h4>
-                Add Student Information
+                Edit Student Information
                 <Link className="btn btn-warning float-end" to="/students">
                   Back
                 </Link>
               </h4>
             </div>
             <div className="card-body">
-              <form onSubmit={saveStudent}>
+              <form onSubmit={updateStudent}>
                 <div className="form-group mb-3">
                   <label>Student Name</label>
                   <input
@@ -103,7 +125,7 @@ function StudentAdd() {
                 </div>
                 <div className="mb-3">
                   <button type="submit" className="btn btn-success">
-                    Add Student
+                    Update Student
                   </button>
                 </div>
               </form>
@@ -115,4 +137,4 @@ function StudentAdd() {
   );
 }
 
-export default StudentAdd;
+export default StudentEdit;

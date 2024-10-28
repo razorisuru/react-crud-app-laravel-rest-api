@@ -10,7 +10,11 @@ function Students() {
 
   useEffect(() => {
     axios
-      .get("http://127.0.0.1:8000/api/student")
+      .get("http://127.0.0.1:8000/api/student", {
+        headers: {
+          "x-api-key": "318",
+        },
+      })
       .then((res) => {
         console.log(res.data);
         setStudents(res.data.student);
